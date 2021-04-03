@@ -17,7 +17,8 @@ from streamlit.server.server import Server
 from settings import NODE_IOT_AGENT_REPO_URL
 from settings import NODE_IOT_AGENT_LOCAL_REPO
 from core.clean_branch import refresh_branch
-from core.shell_io import run_process
+import serial.tools.list_ports
+import subprocess
 
 
 def main():
@@ -50,7 +51,6 @@ def home(state):
     repo = Repo(NODE_IOT_AGENT_LOCAL_REPO)
     for remote in repo.remotes:
         remote.fetch()
-    if os.path.isdir(NODE_IOT_AGENT_LOCAL_REPO):
         col1, col2 = st.beta_columns(2)
         col1.success("Local node agent sources files found")
         try:
@@ -80,8 +80,13 @@ def home(state):
 
 
 def mega_firmata(state):
-    import subprocess
     st.title(":wrench: Flash Arduino Mega firmware")
+
+    col1, col2 = st.beta_columns(2)
+
+    _serial = col1.selectbox("", [x.device for x in serial.tools.list_ports.comports()])
+    if col2.button("Refresh"):
+        st.experimental_rerun()
 
     if st.button("Start flash"):
         _cmd = (f"pipenv shell || true "
@@ -90,14 +95,32 @@ def mega_firmata(state):
                 f"&& "
                 f"pio update "
                 f"&& "
-                f"pio run -t upload")
+                f"pio run -t upload --upload-port {_serial}")
         output = subprocess.Popen(_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         for line in output.stdout:
             st.text(line.decode("utf-8"))
 
 
 def nano_sonar(state):
-    st.title(":wrench: Flash Arduino Nano firmware")
+    st.title(":wrench: Flash Ard"
+             "uino Nano firmware")
+
+    col1, col2 = st.beta_columns(2)
+    _serial = col1.selectbox("", [x.device for x in serial.tools.list_ports.comports()])
+    if col2.button("Refresh"):
+        st.experimental_rerun()
+
+    if st.button("Start flash"):
+        _cmd = (f"pipenv shell || true "
+                f"&& "
+                f"cd {NODE_IOT_AGENT_LOCAL_REPO}/nano_sonar "
+                f"&& "
+                f"pio update "
+                f"&& "
+                f"pio run -t upload --upload-port {_serial}")
+        output = subprocess.Popen(_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        for line in output.stdout:
+            st.text(line.decode("utf-8"))
 
 
 def deploy_water_node_agent(state):
