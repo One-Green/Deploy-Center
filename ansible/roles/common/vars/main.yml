@@ -3,5 +3,5 @@
 
 iot_edge_agent:
   repo: "https://github.com/One-Green/iot-edge-agent.git"
-  version: "v0.0.1"
+  version: "{{ iot_edge_agent_version | default('master') }}"
   dest: "/srv/iot_node_agent"

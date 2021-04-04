@@ -46,6 +46,8 @@
     repo: "{{ iot_edge_agent.repo }}"
     dest: "{{ iot_edge_agent.dest }}"
     version: "{{ iot_edge_agent.version }}"
+  tags:
+    - change-version
 
 - name: Install Python requirements
   pip:
