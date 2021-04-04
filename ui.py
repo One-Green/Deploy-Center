@@ -44,26 +44,33 @@ def main():
 
 def home(state):
     st.title("One-Green IoT Agent and Microcontroller setup wizard")
+
     try:
         Repo.clone_from(NODE_IOT_AGENT_REPO_URL, NODE_IOT_AGENT_LOCAL_REPO)
     except GitCommandError:
         pass
+
+    if os.path.isdir(NODE_IOT_AGENT_LOCAL_REPO):
+        st.success("Local node agent sources files found")
+    else:
+        st.error("Local node agent sources files not found")
+
     repo = Repo(NODE_IOT_AGENT_LOCAL_REPO)
     for remote in repo.remotes:
         remote.fetch()
-        col1, col2 = st.beta_columns(2)
-        col1.success("Local node agent sources files found")
-        try:
-            col1.success(repo.active_branch)
-        except TypeError:
-            pass
-        for tag in repo.tags:
-            col1.success(tag)
-        if col2.button("Sync changes from Github repo"):
-            for remote in repo.remotes:
-                remote.fetch()
-    else:
-        st.error("Local node agent sources files not found")
+    if st.button("Sync changes from Github repo"):
+        for remote in repo.remotes:
+            remote.fetch()
+
+    col1, col2 = st.beta_columns(2)
+
+    try:
+        col1.success(repo.active_branch)
+    except TypeError:
+        pass
+
+    for tag in repo.tags:
+        col1.success(tag)
 
     remote_ref = ["/" + x.name for x in repo.remote().refs]
     tags = ["/" + x.name for x in repo.tags]
@@ -71,6 +78,7 @@ def home(state):
     for _ in remote_ref + tags:
         if 'HEAD' not in _:
             branch_and_tags.append(_.split('/')[-1])
+
     option = st.selectbox("Use this branch/release", branch_and_tags)
     if st.button("Apply changes"):
         refresh_branch(repo, NODE_IOT_AGENT_REPO_URL, option)
