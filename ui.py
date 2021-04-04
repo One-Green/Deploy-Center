@@ -19,6 +19,7 @@ from settings import NODE_IOT_AGENT_LOCAL_REPO
 from core.clean_branch import refresh_branch
 import serial.tools.list_ports
 import subprocess
+import socket
 
 
 def main():
@@ -133,6 +134,11 @@ def nano_sonar(state):
 
 def deploy_water_node_agent(state):
     st.title(":wrench: Deploy water node agent ")
+    ssh_user = st.text_input("SSH User:")
+    ssh_password = st.text_input("SSH Password:")
+    IP1 = socket.gethostbyname(socket.gethostname())
+    st.write(IP1)
+
 
 
 class _SessionState:
