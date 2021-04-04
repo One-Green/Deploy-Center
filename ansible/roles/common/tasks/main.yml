@@ -54,12 +54,11 @@
     requirements: "{{ iot_edge_agent.dest }}/requirements.txt"
     executable: pip3
 
-
-- name: Set MQTT environments varialbes
+- name: Persist environments varialbes /etc/environnment
   lineinfile:
-    dest: ~{{ console_user | default(ansible_user) }}/.bashrc
-    line: "export {{ item.env }}='{{ item.value }}'"
-    regexp: "^export {{ item.env }}="
+    dest: /etc/environment
+    line: "{{ item.env }}='{{ item.value }}'"
+    regexp: "^{{ item.env }}="
     state: present
   loop:
     - { env: MQTT_HOST, value: "{{ mqtt_host }}" }
@@ -67,7 +66,7 @@
     - { env: MQTT_USER,  value: "{{ mqtt_user }}" }
     - { env: MQTT_PASSWORD,  value: "{{ mqtt_password }}" }
   tags:
-    - set-mqtt-env-bashrc
+    - set-env-bashrc
 
 - name: "Stop all"
   shell: pm2 stop all
@@ -79,7 +78,7 @@
     - name: "Stop all"
       shell: pm2 stop all
     - name: "Start agent"
-      shell: "cd {{ iot_edge_agent.dest }}/water && pm2 start {{item}}.py --interpreter python3 && pm2 save"
+      shell: "cd {{ iot_edge_agent.dest }}/water && pm2 start {{item}}.py --interpreter python3 --update-env && pm2 save"
       loop:
         - "agent"
         - "watchdog"

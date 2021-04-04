@@ -10,12 +10,12 @@ sshpass-osx:
 sshpass-ubuntu:
 	apt update && apt install sshpass -y
 
-test-ansible-set-bashrc:
+test-ansible-set-env:
 	@ansible-playbook ansible/deploy_common.yaml \
     		-i ansible/hosts \
-    		--tags "set-mqtt-env-bashrc" \
-    		--extra-vars "mqtt_host=test" \
-    		--extra-vars "mqtt_port=8888" \
+    		--tags "set-env-bashrc" \
+    		--extra-vars "mqtt_host=010e7d5e-3a86-4c87-a4bc-8d7a82bf5d2e.nodes.k8s.fr-par.scw.cloud" \
+    		--extra-vars "mqtt_port=30181" \
     		--extra-vars "mqtt_user=mqtt" \
     		--extra-vars "mqtt_password=anyrandompassword" \
     		--extra-vars "ansible_user=${SSH_USER}" \
