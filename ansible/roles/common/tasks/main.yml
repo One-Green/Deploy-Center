@@ -53,3 +53,31 @@
   pip:
     requirements: "{{ iot_edge_agent.dest }}/requirements.txt"
     executable: pip3
+
+
+- name: Set MQTT environments varialbes
+  lineinfile:
+    dest: ~{{ console_user | default(ansible_user) }}/.bashrc
+    line: "export {{ item.env }}='{{ item.value }}'"
+    regexp: "^export {{ item.env }}="
+    state: present
+  loop:
+    - { env: MQTT_HOST, value: "{{ mqtt_host }}" }
+    - { env: MQTT_PORT, value: "{{ mqtt_port }}" }
+    - { env: MQTT_USER,  value: "{{ mqtt_user }}" }
+    - { env: MQTT_PASSWORD,  value: "{{ mqtt_password }}" }
+  tags:
+    - set-mqtt-env-bashrc
+
+#
+#- name: Start water node agent services
+#  block:
+#    - name: "Start watchdog"
+#      shell: "cd {{ iot_edge_agent.dest }}/water && pm2 start watchdog.py --interpreter python3 && pm2 save"
+#    - name: "Start callback agent"
+#      shell: "cd {{ iot_edge_agent.dest }}/water && pm2 start agent_callback.py --interpreter python3 && pm2 save"
+#    - name: "Start agent"
+#      shell: "cd {{ iot_edge_agent.dest }}/water && pm2 start agent.py --interpreter python3 && pm2 save"
+#    - name: "Start state-exporter"
+#      shell: "cd {{ iot_edge_agent.dest }}/water && pm2 start state_exporter.py --interpreter python3 && pm2 save"
+#
