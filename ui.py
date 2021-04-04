@@ -152,7 +152,7 @@ def deploy_water_node_agent(state):
         _cmd = (
             f'ANSIBLE_HOST_KEY_CHECKING=False '
             f'ansible-playbook ansible/deploy_common.yaml -i {ip}, '
-            f'--extra-vars "iot_edge_agent.version={version}" '
+            f'--extra-vars "iot_edge_agent_version={version}" '
             f'--extra-vars "ansible_user={ssh_user}" '
             f'--extra-vars "ansible_password={ssh_password}"'
         )
