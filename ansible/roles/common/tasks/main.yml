@@ -69,15 +69,21 @@
   tags:
     - set-mqtt-env-bashrc
 
-#
-#- name: Start water node agent services
-#  block:
-#    - name: "Start watchdog"
-#      shell: "cd {{ iot_edge_agent.dest }}/water && pm2 start watchdog.py --interpreter python3 && pm2 save"
-#    - name: "Start callback agent"
-#      shell: "cd {{ iot_edge_agent.dest }}/water && pm2 start agent_callback.py --interpreter python3 && pm2 save"
-#    - name: "Start agent"
-#      shell: "cd {{ iot_edge_agent.dest }}/water && pm2 start agent.py --interpreter python3 && pm2 save"
-#    - name: "Start state-exporter"
-#      shell: "cd {{ iot_edge_agent.dest }}/water && pm2 start state_exporter.py --interpreter python3 && pm2 save"
-#
+- name: "Stop all"
+  shell: pm2 stop all
+  tags:
+    - stop-agent
+
+- name: Start water node agent services
+  block:
+    - name: "Stop all"
+      shell: pm2 stop all
+    - name: "Start agent"
+      shell: "cd {{ iot_edge_agent.dest }}/water && pm2 start {{item}}.py --interpreter python3 && pm2 save"
+      loop:
+        - "agent"
+        - "watchdog"
+        - "agent_callback"
+        - "state_exporter"
+  tags:
+    - stop-start-water-agent
