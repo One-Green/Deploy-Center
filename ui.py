@@ -16,10 +16,13 @@ from streamlit.report_thread import get_report_ctx
 from streamlit.server.server import Server
 from settings import NODE_IOT_AGENT_REPO_URL
 from settings import NODE_IOT_AGENT_LOCAL_REPO
+from settings import NOE_IOT_GITHUB_TAG_API
 from core.clean_branch import refresh_branch
+from core.lanscan import arp
+from core.github import get_repo_tags
 import serial.tools.list_ports
 import subprocess
-import socket
+import ansible
 
 
 def main():
@@ -134,11 +137,32 @@ def nano_sonar(state):
 
 def deploy_water_node_agent(state):
     st.title(":wrench: Deploy water node agent ")
+    if st.button("Refresh Ip list"):
+        st.experimental_rerun()
+
+    ip = st.selectbox("Select hardware ip", [x['ip'] for x in arp()])
+    # ip = st.selectbox("Select hardware ip", ["192.168.0.8"])
     ssh_user = st.text_input("SSH User:")
     ssh_password = st.text_input("SSH Password:")
-    IP1 = socket.gethostbyname(socket.gethostname())
-    st.write(IP1)
+    version = st.selectbox("Select software version", list(get_repo_tags(NOE_IOT_GITHUB_TAG_API)))
 
+    col1, col2 = st.beta_columns(2)
+    if col1.button("Install commons"):
+
+        _cmd = (
+            f'ANSIBLE_HOST_KEY_CHECKING=False '
+            f'ansible-playbook ansible/deploy_common.yaml -i {ip}, '
+            f'--extra-vars "iot_edge_agent.version={version}" '
+            f'--extra-vars "ansible_user={ssh_user}" '
+            f'--extra-vars "ansible_password={ssh_password}"'
+        )
+        # TODO: remove after dev password will be visible
+        # st.write(_cmd)
+        output = subprocess.Popen(_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        for line in output.stdout:
+            st.text(line.decode("utf-8"))
+        for line in output.stderr:
+            st.text(line.decode("utf-8"))
 
 
 class _SessionState:
