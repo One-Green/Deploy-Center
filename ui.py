@@ -22,7 +22,6 @@ from core.lanscan import arp
 from core.github import get_repo_tags
 import serial.tools.list_ports
 import subprocess
-import ansible
 
 
 def main():
@@ -137,17 +136,27 @@ def nano_sonar(state):
 
 def deploy_water_node_agent(state):
     st.title(":wrench: Deploy water node agent ")
-    if st.button("Refresh Ip list"):
-        st.experimental_rerun()
 
-    ip = st.selectbox("Select hardware ip", [x['ip'] for x in arp()])
-    # ip = st.selectbox("Select hardware ip", ["192.168.0.8"])
-    ssh_user = st.text_input("SSH User:")
-    ssh_password = st.text_input("SSH Password:")
-    version = st.selectbox("Select software version", list(get_repo_tags(NOE_IOT_GITHUB_TAG_API)))
+    if st.button("Auto scan local network"):
+        ip = st.selectbox("Select hardware ip", [x['ip'] for x in arp()])
+    else:
+        ip = st.text_input("Set hardware ip", "192.168.x.x")
 
     col1, col2 = st.beta_columns(2)
-    if col1.button("Install commons"):
+    ssh_user = col1.text_input("SSH User:")
+    ssh_password = col2.text_input("SSH Password:", type="password")
+    version = st.selectbox(
+        "Select software version ( avalaible tags from GithHub)",
+        list(get_repo_tags(NOE_IOT_GITHUB_TAG_API))
+    )
+
+    mqtt_host = st.text_input("MQTT Host:")
+    mqtt_port = st.text_input("MQTT Port:")
+    mqtt_user = st.text_input("MQTT User:")
+    mqtt_password = st.text_input("MQTT Password:", type="password")
+
+    col1, col2 = st.beta_columns(2)
+    if col1.button("Install commons", help="This installation is required once / for major uppgrade only"):
 
         _cmd = (
             f'ANSIBLE_HOST_KEY_CHECKING=False '
@@ -156,8 +165,19 @@ def deploy_water_node_agent(state):
             f'--extra-vars "ansible_user={ssh_user}" '
             f'--extra-vars "ansible_password={ssh_password}"'
         )
-        # TODO: remove after dev password will be visible
-        # st.write(_cmd)
+        output = subprocess.Popen(_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        for line in output.stdout:
+            st.text(line.decode("utf-8"))
+        for line in output.stderr:
+            st.text(line.decode("utf-8"))
+
+    if col2.button(
+            "Configure and (re)start agent",
+            help="Fetch new version/start/restart agent with new configuration"
+    ):
+        _cmd = (
+            'echo "hello"'
+        )
         output = subprocess.Popen(_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         for line in output.stdout:
             st.text(line.decode("utf-8"))
