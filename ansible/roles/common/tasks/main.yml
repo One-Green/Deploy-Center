@@ -1,0 +1,28 @@
+---
+# tasks file for platform
+
+- name: Install binaire (python,pip,sqlite3...)
+  apt:
+    name:
+      - python3-dev
+      - python3-pip
+      - sqlite3
+      - wget
+    state: present
+    update_cache: yes
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Check pm2 exist
+  shell: "which pm2"
+  register: pm2_result
+  ignore_errors: true
+
+- name: Install pm2
+  shell: "wget -qO- https://getpm2.com/install.sh | bash"
+  when: "'FAILED' in pm2_result.stderr"
+
+- name: Git checkout
+  ansible.builtin.git:
+    repo: "{{ iot_edge_agent.repo }}"
+    dest: "{{ iot_edge_agent.dest }}"
+    version: "{{ iot_edge_agent.version }}"

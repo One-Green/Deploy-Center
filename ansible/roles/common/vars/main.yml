@@ -1,0 +1,7 @@
+---
+# vars file for platform
+
+iot_edge_agent:
+  repo: "https://github.com/One-Green/iot-edge-agent.git"
+  version: "v0.0.1"
+  dest: "/srv/iot_node_agent"
