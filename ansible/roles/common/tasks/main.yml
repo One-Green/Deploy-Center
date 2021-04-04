@@ -1,7 +1,18 @@
 ---
+# Author Shanmugathas Vigneswaran
 # tasks file for platform
 
-- name: Install binaire (python,pip,sqlite3...)
+- name: Clean node agent
+  block:
+    - name: clean /tmp
+      shell: /bin/rm -rf /tmp/*
+    - name: clean logs
+      shell: /bin/rm -f /var/log/*/*.log
+    - name: Remove dependencies that are no longer required
+      apt:
+        autoremove: yes
+
+- name: Install binaries (python,pip,sqlite3...)
   apt:
     name:
       - python3-dev
@@ -12,17 +23,30 @@
     update_cache: yes
   when: ansible_facts['os_family'] == "Debian"
 
-- name: Check pm2 exist
-  shell: "which pm2"
-  register: pm2_result
-  ignore_errors: true
+- name: Ensure pm2 is installed
+  block:
+    - name: Check pm2 exist
+      shell: "which pm2"
+  rescue:
+    - name: Resize /tmp 246M > 500M
+      shell: "mount -o remount,size=500M /tmp/"
+    - name: Install pm2
+      shell: "wget -qO- https://getpm2.com/install.sh | bash"
+    - name: clean /tmp
+      shell: "/bin/rm -rf /tmp/*"
+    - name: "Resize /tmp 500M > 246M"
+      shell: "mount -o remount,size=246M /tmp/"
 
-- name: Install pm2
-  shell: "wget -qO- https://getpm2.com/install.sh | bash"
-  when: "'FAILED' in pm2_result.stderr"
+- name: pm2 autostart node agent at startup
+  shell: "pm2 startup"
 
-- name: Git checkout
+- name: "Git clone iot-edge-agent version: {{ iot_edge_agent.version}} > {{ iot_edge_agent.dest }}"
   ansible.builtin.git:
     repo: "{{ iot_edge_agent.repo }}"
     dest: "{{ iot_edge_agent.dest }}"
     version: "{{ iot_edge_agent.version }}"
+
+- name: Install Python requirements
+  pip:
+    requirements: "{{ iot_edge_agent.dest }}/requirements.txt"
+    executable: pip3
