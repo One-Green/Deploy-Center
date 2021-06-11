@@ -1,0 +1,8 @@
+---
+# vars file for platform
+
+wifi_ssid: ""
+wifi_secret: ""
+
+iot_edge_agent:
+  dest: "/srv/iot_node_agent"

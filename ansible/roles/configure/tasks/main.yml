@@ -1,0 +1,41 @@
+---
+# tasks file for platform
+
+- name: Setup Wifi parameter
+  shell: "nmcli device wifi connect {{ wifi_ssid }} password {{ wifi_secret }}"
+  tags:
+    - setup-wifi
+
+- name: Persist MQTT variables varialbes > /etc/environnment
+  lineinfile:
+    dest: /etc/environment
+    line: "{{ item.env }}='{{ item.value }}'"
+    regexp: "^{{ item.env }}="
+    state: present
+  loop:
+    - { env: MQTT_HOST, value: "{{ mqtt_host }}" }
+    - { env: MQTT_PORT, value: "{{ mqtt_port }}" }
+    - { env: MQTT_USER,  value: "{{ mqtt_user }}" }
+    - { env: MQTT_PASSWORD,  value: "{{ mqtt_password }}" }
+  tags:
+    - set-mqtt-env
+
+- name: "Stop all"
+  shell: pm2 stop all
+  tags:
+    - stop-agent
+
+- name: Start water node agent services
+  block:
+    - name: "Stop all"
+      shell: pm2 stop all
+      ignore_errors: yes
+    - name: "Start agent"
+      shell: "cd {{ iot_edge_agent.dest }}/water && pm2 start {{item}}.py --interpreter python3.8 --update-env && pm2 save"
+      loop:
+        - "agent"
+        - "watchdog"
+        - "agent_callback"
+        - "state_exporter"
+  tags:
+    - stop-start-water-agent

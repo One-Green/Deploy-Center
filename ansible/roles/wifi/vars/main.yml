@@ -1,6 +1,0 @@
----
-# vars file for platform
-
-wifi:
-  ssid: ""
-  secret: ""

@@ -15,14 +15,26 @@
 - name: Install binaries (python,pip,sqlite3...)
   apt:
     name:
-      - python3-dev
-      - python3-pip
+      - python3.8-dev
+      - python3.8-distutils
       - sqlite3
       - wget
       - lsb-core
     state: present
     update_cache: yes
   when: ansible_facts['os_family'] == "Debian"
+
+- name: Install Pip
+  block:
+    - name: Check pip3.8 exist
+      shell: "which pip3.8"
+  rescue:
+    - name: Get Pip
+      get_url:
+        url: https://bootstrap.pypa.io/get-pip.py
+        dest: /tmp/get-pip.py
+    - name: Install Pip
+      shell: python3.8 /tmp/get-pip.py
 
 - name: Ensure pm2 is installed
   block:
@@ -50,39 +62,4 @@
     - change-version
 
 - name: Install Python requirements
-  pip:
-    requirements: "{{ iot_edge_agent.dest }}/requirements.txt"
-    executable: pip3
-
-- name: Persist environments varialbes /etc/environnment
-  lineinfile:
-    dest: /etc/environment
-    line: "{{ item.env }}='{{ item.value }}'"
-    regexp: "^{{ item.env }}="
-    state: present
-  loop:
-    - { env: MQTT_HOST, value: "{{ mqtt_host }}" }
-    - { env: MQTT_PORT, value: "{{ mqtt_port }}" }
-    - { env: MQTT_USER,  value: "{{ mqtt_user }}" }
-    - { env: MQTT_PASSWORD,  value: "{{ mqtt_password }}" }
-  tags:
-    - set-env-bashrc
-
-- name: "Stop all"
-  shell: pm2 stop all
-  tags:
-    - stop-agent
-
-- name: Start water node agent services
-  block:
-    - name: "Stop all"
-      shell: pm2 stop all
-    - name: "Start agent"
-      shell: "cd {{ iot_edge_agent.dest }}/water && pm2 start {{item}}.py --interpreter python3 --update-env && pm2 save"
-      loop:
-        - "agent"
-        - "watchdog"
-        - "agent_callback"
-        - "state_exporter"
-  tags:
-    - stop-start-water-agent
+  shell: "pip3.8 install -r {{ iot_edge_agent.dest }}/requirements.txt"
