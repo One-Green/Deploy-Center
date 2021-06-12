@@ -137,6 +137,8 @@ def nano_sonar(state):
 def deploy_water_node_agent(state):
     st.title(":wrench: Deploy water node agent ")
 
+    st.markdown("""---""")
+    st.header("Install commons")
     if st.button("Auto scan local network"):
         ip = st.selectbox("Select hardware ip", [x['ip'] for x in arp()])
     else:
@@ -150,40 +152,102 @@ def deploy_water_node_agent(state):
         list(get_repo_tags(NOE_IOT_GITHUB_TAG_API))
     )
 
+
+    if st.button(
+            "Install common dependencies",
+            help="This installation is required once / for major uppgrade only"
+    ):
+        if not (ip or ssh_user or ssh_user):
+            st.warning("IP / ssh user / ssh password => not provided")
+        else:
+            _cmd = (
+                f'ansible-playbook ansible/deploy_common.yaml -i {ip}, '
+                f'--extra-vars "iot_edge_agent_version={version}" '
+                f'--extra-vars "ansible_user={ssh_user}" '
+                f'--extra-vars "ansible_password={ssh_password}"'
+            )
+            output = subprocess.Popen(_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            for line in output.stdout:
+                st.text(line.decode("utf-8"))
+            for line in output.stderr:
+                st.text(line.decode("utf-8"))
+
+    st.markdown("""---""")
+    st.header("Setup Wifi")
+    wifi_ssid = st.text_input("Wifi SSID:")
+    wifi_secret = st.text_input("Wifi Secret:", type="password")
+
+    if st.button(
+            "Submit Wifi configuration",
+            help="Configure wifi on node agent"
+    ):
+        if not (ip or ssh_user or ssh_user):
+            st.warning("IP / ssh user / ssh password => not provided")
+        else:
+            _cmd = (
+                f'ansible-playbook ansible/configure.yaml -i {ip}, '
+                f'--extra-vars "ansible_user={ssh_user}" '
+                f'--extra-vars "ansible_password={ssh_password}" '
+                f'--extra-vars "wifi_ssid={wifi_ssid}" '
+                f'--extra-vars "wifi_secret={wifi_secret}" '
+                f'--tags setup-wifi'
+            )
+            output = subprocess.Popen(_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            for line in output.stdout:
+                st.text(line.decode("utf-8"))
+            for line in output.stderr:
+                st.text(line.decode("utf-8"))
+
+    st.markdown("""---""")
+    st.header("Configure MQTT")
+
     mqtt_host = st.text_input("MQTT Host:")
     mqtt_port = st.text_input("MQTT Port:")
     mqtt_user = st.text_input("MQTT User:")
     mqtt_password = st.text_input("MQTT Password:", type="password")
 
-    col1, col2 = st.beta_columns(2)
-    if col1.button("Install commons", help="This installation is required once / for major uppgrade only"):
+    if st.button(
+            "Submit MQTT configuration",
+            help="Fetch new version/start/restart agent with new configuration"
+    ):
+        if not (ip or ssh_user or ssh_user):
+            st.warning("IP / ssh user / ssh password => not provided")
+        else:
+            _cmd = (
+                f'ansible-playbook ansible/configure.yaml -i {ip}, '
+                f'--extra-vars "ansible_user={ssh_user}" '
+                f'--extra-vars "ansible_password={ssh_password}" '
+                f'--extra-vars "mqtt_host={mqtt_host}" '
+                f'--extra-vars "mqtt_port={mqtt_port}" '
+                f'--extra-vars "mqtt_user={mqtt_user}" '
+                f'--extra-vars "mqtt_password={mqtt_password}" '
+                f'--tags set-mqtt-env'
+            )
+            output = subprocess.Popen(_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            for line in output.stdout:
+                st.text(line.decode("utf-8"))
+            for line in output.stderr:
+                st.text(line.decode("utf-8"))
 
-        _cmd = (
-            f'ANSIBLE_HOST_KEY_CHECKING=False '
-            f'ansible-playbook ansible/deploy_common.yaml -i {ip}, '
-            f'--extra-vars "iot_edge_agent_version={version}" '
-            f'--extra-vars "ansible_user={ssh_user}" '
-            f'--extra-vars "ansible_password={ssh_password}"'
-        )
-        output = subprocess.Popen(_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        for line in output.stdout:
-            st.text(line.decode("utf-8"))
-        for line in output.stderr:
-            st.text(line.decode("utf-8"))
+    st.markdown("""---""")
+    st.header("Start Node Agent")
 
-    if col2.button(
-            "Configure and (re)start agent",
+    if st.button(
+            "Start Node Agent",
             help="Fetch new version/start/restart agent with new configuration"
     ):
         _cmd = (
-            'echo "hello"'
+            f'ansible-playbook ansible/configure.yaml -i {ip}, '
+            f'--extra-vars "wifi={version}" '
+            f'--extra-vars "ansible_user={ssh_user}" '
+            f'--extra-vars "ansible_password={ssh_password}" '
+            f'--tags stop-start-water-agent'
         )
         output = subprocess.Popen(_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         for line in output.stdout:
             st.text(line.decode("utf-8"))
         for line in output.stderr:
             st.text(line.decode("utf-8"))
-
 
 class _SessionState:
 
