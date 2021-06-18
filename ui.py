@@ -16,7 +16,7 @@ from streamlit.report_thread import get_report_ctx
 from streamlit.server.server import Server
 from settings import NODE_IOT_AGENT_REPO_URL
 from settings import NODE_IOT_AGENT_LOCAL_REPO
-from settings import NOE_IOT_GITHUB_TAG_API
+from settings import NODE_IOT_GITHUB_TAG_API
 from core.clean_branch import refresh_branch
 from core.lanscan import arp
 from core.github import get_repo_tags
@@ -149,7 +149,7 @@ def deploy_water_node_agent(state):
     ssh_password = col2.text_input("SSH Password:", type="password")
     version = st.selectbox(
         "Select software version ( avalaible tags from GithHub)",
-        list(get_repo_tags(NOE_IOT_GITHUB_TAG_API))
+        list(get_repo_tags(NODE_IOT_GITHUB_TAG_API))
     )
 
 
