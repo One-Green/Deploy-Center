@@ -2,6 +2,24 @@
 # Author Shanmugathas Vigneswaran
 # tasks file for platform
 
+- name: Enable all hardware features (i2c uart ...)
+  lineinfile:
+    dest: /boot/armbianEnv.txt
+    line: "{{ item.env }}='{{ item.value }}'"
+    regexp: "^{{ item.env }}="
+    state: present
+  loop:
+    - {
+      env: overlays,
+      value: analog-codec cir i2c0 i2c1 i2c2 pps-gpio pwm spdif-out spi-add-cs1 spi-jedec-nor spi-spidev uart1 uart2 uart3 usbhost0 usbhost1 usbhost2 usbhost3 w1-gpio
+    }
+  register: armbian_env
+
+- name: Waiting for reboot because /boot/armbianEnv.txt has changed
+  reboot:
+    reboot_timeout: 300 # wait 5min
+  when: armbian_env.changed
+
 - name: Clean node agent
   block:
     - name: clean /tmp
@@ -62,4 +80,4 @@
     - change-version
 
 - name: Install Python requirements
-  shell: "pip3.8 install -r {{ iot_edge_agent.dest }}/requirements.txt"
+  shell: "pip3.8 install -r {{ iot_edge_agent.dest }}/requirements.txt && pip3.8 install OPi.GPIO"
