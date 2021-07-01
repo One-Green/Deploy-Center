@@ -100,13 +100,13 @@ def mega_firmata(state):
         st.experimental_rerun()
 
     if st.button("Start flash"):
-        _cmd = (f"pipenv shell || true "
-                f"&& "
+        _cmd = (
                 f"cd {NODE_IOT_AGENT_LOCAL_REPO}/mega_firmata "
                 f"&& "
                 f"pio update "
                 f"&& "
-                f"pio run -t upload --upload-port {_serial}")
+                f"pio run -t upload --upload-port {_serial}"
+        )
         output = subprocess.Popen(_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         for line in output.stdout:
             st.text(line.decode("utf-8"))
@@ -122,13 +122,13 @@ def nano_sonar(state):
         st.experimental_rerun()
 
     if st.button("Start flash"):
-        _cmd = (f"pipenv shell || true "
-                f"&& "
+        _cmd = (
                 f"cd {NODE_IOT_AGENT_LOCAL_REPO}/nano_sonar "
                 f"&& "
                 f"pio update "
                 f"&& "
-                f"pio run -t upload --upload-port {_serial}")
+                f"pio run -t upload --upload-port {_serial}"
+        )
         output = subprocess.Popen(_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         for line in output.stdout:
             st.text(line.decode("utf-8"))
