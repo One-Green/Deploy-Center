@@ -22,15 +22,25 @@ from core.lanscan import arp
 from core.github import get_repo_tags
 import serial.tools.list_ports
 import subprocess
+from ansible_vault import Vault
+
+LOCAL_VAULT = "vault.yaml"
+
+
+def get_vault_dict(_secret):
+    """read vault dict"""
+    return Vault(_secret).load(open(LOCAL_VAULT).read())
 
 
 def main():
     state = _get_state()
     pages = {
         "Home": home,
-        "Flash Mega Firmata": mega_firmata,
-        "Flash Nano (Sonar)": nano_sonar,
-        "Deploy Water Node Agent": deploy_water_node_agent,
+        "Core : Configuration": config,
+        "Water Node : Flash Mega Firmata": mega_firmata,
+        "Water Node : Flash Nano (Sonar)": nano_sonar,
+        "Water Node : Deploy Node Agent": deploy_water_node_agent,
+        "Sprinkler Node : Flash firmware": sprinkler_firmware,
         # "Air temperature": air_settings,
         # "Air humidity": air_humidity
     }
@@ -49,9 +59,11 @@ def home(state):
     st.title("One-Green IoT Agent and Microcontroller setup wizard")
 
     if os.path.isdir(NODE_IOT_AGENT_LOCAL_REPO):
-        st.success("Local node agent sources files found ... downloading")
+        st.success("Local node agent sources files found")
     else:
         st.error("Local node agent sources files not found")
+        time.sleep(0.5)
+        st.error("Trying to download ...")
         try:
             Repo.clone_from(NODE_IOT_AGENT_REPO_URL, NODE_IOT_AGENT_LOCAL_REPO)
             st.experimental_rerun()
@@ -90,16 +102,86 @@ def home(state):
         st.experimental_rerun()
 
 
+def config(state):
+    st.title(":wrench: Core configuration")
+    st.write("Save/load  securely Wifi/One-Green Core secret locally")
+    vault_exist = False
+    if os.path.isfile(LOCAL_VAULT):
+        vault_exist = True
+    else:
+        st.warning(f"{LOCAL_VAULT=} file not found, create new one ")
+    vault_secret = st.text_input(
+        "Local Vault password:",
+        help="Set password to save/load encrypted data",
+        type="password",
+    )
+    if vault_exist:
+        st.success(f"{LOCAL_VAULT=} found ")
+        col1, col2 = st.beta_columns(2)
+        if col1.button("Unseal vault"):
+            st.write(get_vault_dict(vault_secret))
+        if col2.button("Delete existing vault"):
+            os.remove(LOCAL_VAULT)
+            st.success(f"{LOCAL_VAULT} is deleted !")
+            time.sleep(0.5)
+            st.experimental_rerun()
+
+    else:
+        st.subheader("WIFI Parameter")
+        col1, col2 = st.beta_columns(2)
+        wifi_ssid = col1.text_input("Wifi SSID:")
+        wifi_secret = col2.text_input("Wifi Secret:", type="password")
+
+        st.subheader("MQTT Parameter")
+        col1, col2 = st.beta_columns(2)
+        mqtt_host = col1.text_input("MQTT Host:")
+        mqtt_port = col2.text_input("MQTT Port:")
+        col1, col2 = st.beta_columns(2)
+        mqtt_user = col1.text_input("MQTT User:")
+        mqtt_password = col2.text_input("MQTT Password:", type="password")
+
+        st.subheader("API Parameter")
+        api_host = st.text_input("Api Host:")
+        api_port = st.text_input("Api Port:")
+        api_basic_auth_user = st.text_input("Api Basic Auth User:")
+        api_basic_auth_password = st.text_input(
+            "Api Basic Auth Password:", type="password"
+        )
+
+        data = {
+            "wifi_ssid": wifi_ssid,
+            "wifi_secret": wifi_secret,
+            "mqtt_host": mqtt_host,
+            "mqtt_port": mqtt_port,
+            "mqtt_user": mqtt_user,
+            "mqtt_password": mqtt_password,
+            "api_host": api_host,
+            "api_port": api_port,
+            "api_basic_auth_user": api_basic_auth_user,
+            "api_basic_auth_password": api_basic_auth_password,
+        }
+
+        if st.button("Save to vault.yaml file"):
+            vault = Vault(vault_secret)
+            vault.dump(data, open(LOCAL_VAULT, "w"))
+            st.success(f"{LOCAL_VAULT} saved successfully")
+            time.sleep(0.5)
+            st.experimental_rerun()
+
+
+def sprinkler_firmware(state):
+    st.title("WIP")
+
+
 def mega_firmata(state):
     st.title(":wrench: Flash Arduino Mega firmware")
+    _serial = st.selectbox("", [x.device for x in serial.tools.list_ports.comports()])
 
     col1, col2 = st.beta_columns(2)
-
-    _serial = col1.selectbox("", [x.device for x in serial.tools.list_ports.comports()])
-    if col2.button("Refresh"):
+    if col1.button("Refresh serial port list"):
         st.experimental_rerun()
 
-    if st.button("Start flash"):
+    if col2.button("Flash"):
         _cmd = (
             f"cd {NODE_IOT_AGENT_LOCAL_REPO}/mega_firmata "
             f"&& "
@@ -116,13 +198,13 @@ def mega_firmata(state):
 
 def nano_sonar(state):
     st.title(":wrench: Flash Ard" "uino Nano firmware")
+    _serial = st.selectbox("", [x.device for x in serial.tools.list_ports.comports()])
 
     col1, col2 = st.beta_columns(2)
-    _serial = col1.selectbox("", [x.device for x in serial.tools.list_ports.comports()])
-    if col2.button("Refresh"):
+    if col1.button("Refresh serial port list"):
         st.experimental_rerun()
 
-    if st.button("Start flash"):
+    if col2.button("Flash"):
         _cmd = (
             f"cd {NODE_IOT_AGENT_LOCAL_REPO}/nano_sonar "
             f"&& "
