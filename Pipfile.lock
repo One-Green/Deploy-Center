@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f3669392a0cbb0df90319524b16227392eeb036af9390c39fc93c2fca8a0c34b"
+            "sha256": "79f1de5769eaf4772e377a6f69f88d138e20b87741c50da6ae5f7ae9db063d93"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -52,6 +52,13 @@
             ],
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'",
             "version": "==2.11.2"
+        },
+        "ansible-vault": {
+            "hashes": [
+                "sha256:5ce8fdb5470f1449b76bf07ae2abc56480dad48356ae405c85b686efb64dbd5e"
+            ],
+            "index": "pypi",
+            "version": "==2.1.0"
         },
         "appnope": {
             "hashes": [
