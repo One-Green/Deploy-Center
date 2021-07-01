@@ -11,7 +11,7 @@
   loop:
     - {
       env: overlays,
-      value: analog-codec cir i2c0 i2c1 i2c2 pps-gpio pwm spdif-out spi-add-cs1 spi-jedec-nor spi-spidev uart1 uart2 uart3 usbhost0 usbhost1 usbhost2 usbhost3 w1-gpio
+      value: uart1
     }
   register: armbian_env
 
@@ -80,4 +80,4 @@
     - change-version
 
 - name: Install Python requirements
-  shell: "pip3.8 install -r {{ iot_edge_agent.dest }}/requirements.txt && pip3.8 install OPi.GPIO"
+  shell: "pip3.8 install -r {{ iot_edge_agent.dest }}/requirements.txt"
