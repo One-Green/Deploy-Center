@@ -56,7 +56,9 @@ def home(state):
             Repo.clone_from(NODE_IOT_AGENT_REPO_URL, NODE_IOT_AGENT_LOCAL_REPO)
             st.experimental_rerun()
         except GitCommandError:
-            st.write(f"Can not download repo, please check this repo {NODE_IOT_AGENT_REPO_URL=}")
+            st.write(
+                f"Can not download repo, please check this repo {NODE_IOT_AGENT_REPO_URL=}"
+            )
 
     repo = Repo(NODE_IOT_AGENT_LOCAL_REPO)
     for remote in repo.remotes:
@@ -77,8 +79,8 @@ def home(state):
     tags = ["/" + x.name for x in repo.tags]
     branch_and_tags = []
     for _ in remote_ref + tags:
-        if 'HEAD' not in _:
-            branch_and_tags.append(_.split('/')[-1])
+        if "HEAD" not in _:
+            branch_and_tags.append(_.split("/")[-1])
 
     option = st.selectbox("Use this branch/release", branch_and_tags)
     if st.button("Apply changes"):
@@ -99,20 +101,21 @@ def mega_firmata(state):
 
     if st.button("Start flash"):
         _cmd = (
-                f"cd {NODE_IOT_AGENT_LOCAL_REPO}/mega_firmata "
-                f"&& "
-                f"pio update "
-                f"&& "
-                f"pio run -t upload --upload-port {_serial}"
+            f"cd {NODE_IOT_AGENT_LOCAL_REPO}/mega_firmata "
+            f"&& "
+            f"pio update "
+            f"&& "
+            f"pio run -t upload --upload-port {_serial}"
         )
-        output = subprocess.Popen(_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output = subprocess.Popen(
+            _cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
         for line in output.stdout:
             st.text(line.decode("utf-8"))
 
 
 def nano_sonar(state):
-    st.title(":wrench: Flash Ard"
-             "uino Nano firmware")
+    st.title(":wrench: Flash Ard" "uino Nano firmware")
 
     col1, col2 = st.beta_columns(2)
     _serial = col1.selectbox("", [x.device for x in serial.tools.list_ports.comports()])
@@ -121,13 +124,15 @@ def nano_sonar(state):
 
     if st.button("Start flash"):
         _cmd = (
-                f"cd {NODE_IOT_AGENT_LOCAL_REPO}/nano_sonar "
-                f"&& "
-                f"pio update "
-                f"&& "
-                f"pio run -t upload --upload-port {_serial}"
+            f"cd {NODE_IOT_AGENT_LOCAL_REPO}/nano_sonar "
+            f"&& "
+            f"pio update "
+            f"&& "
+            f"pio run -t upload --upload-port {_serial}"
         )
-        output = subprocess.Popen(_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output = subprocess.Popen(
+            _cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
         for line in output.stdout:
             st.text(line.decode("utf-8"))
 
@@ -138,7 +143,7 @@ def deploy_water_node_agent(state):
     st.markdown("""---""")
     st.header("Install commons")
     if st.button("Auto scan local network"):
-        ip = st.selectbox("Select hardware ip", [x['ip'] for x in arp()])
+        ip = st.selectbox("Select hardware ip", [x["ip"] for x in arp()])
     else:
         ip = st.text_input("Set hardware ip", "192.168.x.x")
 
@@ -147,24 +152,25 @@ def deploy_water_node_agent(state):
     ssh_password = col2.text_input("SSH Password:", type="password")
     version = st.selectbox(
         "Select software version ( avalaible tags from GithHub)",
-        list(get_repo_tags(NODE_IOT_GITHUB_TAG_API))
+        list(get_repo_tags(NODE_IOT_GITHUB_TAG_API)),
     )
 
-
     if st.button(
-            "Install common dependencies",
-            help="This installation is required once / for major uppgrade only"
+        "Install common dependencies",
+        help="This installation is required once / for major uppgrade only",
     ):
         if not (ip or ssh_user or ssh_user):
             st.warning("IP / ssh user / ssh password => not provided")
         else:
             _cmd = (
-                f'ansible-playbook ansible/deploy_common.yaml -i {ip}, '
+                f"ansible-playbook ansible/deploy_common.yaml -i {ip}, "
                 f'--extra-vars "iot_edge_agent_version={version}" '
                 f'--extra-vars "ansible_user={ssh_user}" '
                 f'--extra-vars "ansible_password={ssh_password}"'
             )
-            output = subprocess.Popen(_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            output = subprocess.Popen(
+                _cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
             for line in output.stdout:
                 st.text(line.decode("utf-8"))
             for line in output.stderr:
@@ -175,22 +181,21 @@ def deploy_water_node_agent(state):
     wifi_ssid = st.text_input("Wifi SSID:")
     wifi_secret = st.text_input("Wifi Secret:", type="password")
 
-    if st.button(
-            "Submit Wifi configuration",
-            help="Configure wifi on node agent"
-    ):
+    if st.button("Submit Wifi configuration", help="Configure wifi on node agent"):
         if not (ip or ssh_user or ssh_user):
             st.warning("IP / ssh user / ssh password => not provided")
         else:
             _cmd = (
-                f'ansible-playbook ansible/configure.yaml -i {ip}, '
+                f"ansible-playbook ansible/configure.yaml -i {ip}, "
                 f'--extra-vars "ansible_user={ssh_user}" '
                 f'--extra-vars "ansible_password={ssh_password}" '
                 f'--extra-vars "wifi_ssid={wifi_ssid}" '
                 f'--extra-vars "wifi_secret={wifi_secret}" '
-                f'--tags setup-wifi'
+                f"--tags setup-wifi"
             )
-            output = subprocess.Popen(_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            output = subprocess.Popen(
+                _cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
             for line in output.stdout:
                 st.text(line.decode("utf-8"))
             for line in output.stderr:
@@ -205,23 +210,25 @@ def deploy_water_node_agent(state):
     mqtt_password = st.text_input("MQTT Password:", type="password")
 
     if st.button(
-            "Submit MQTT configuration",
-            help="Fetch new version/start/restart agent with new configuration"
+        "Submit MQTT configuration",
+        help="Fetch new version/start/restart agent with new configuration",
     ):
         if not (ip or ssh_user or ssh_user):
             st.warning("IP / ssh user / ssh password => not provided")
         else:
             _cmd = (
-                f'ansible-playbook ansible/configure.yaml -i {ip}, '
+                f"ansible-playbook ansible/configure.yaml -i {ip}, "
                 f'--extra-vars "ansible_user={ssh_user}" '
                 f'--extra-vars "ansible_password={ssh_password}" '
                 f'--extra-vars "mqtt_host={mqtt_host}" '
                 f'--extra-vars "mqtt_port={mqtt_port}" '
                 f'--extra-vars "mqtt_user={mqtt_user}" '
                 f'--extra-vars "mqtt_password={mqtt_password}" '
-                f'--tags set-mqtt-env'
+                f"--tags set-mqtt-env"
             )
-            output = subprocess.Popen(_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            output = subprocess.Popen(
+                _cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
             for line in output.stdout:
                 st.text(line.decode("utf-8"))
             for line in output.stderr:
@@ -231,24 +238,26 @@ def deploy_water_node_agent(state):
     st.header("Start Node Agent")
 
     if st.button(
-            "Start Node Agent",
-            help="Fetch new version/start/restart agent with new configuration"
+        "Start Node Agent",
+        help="Fetch new version/start/restart agent with new configuration",
     ):
         _cmd = (
-            f'ansible-playbook ansible/configure.yaml -i {ip}, '
+            f"ansible-playbook ansible/configure.yaml -i {ip}, "
             f'--extra-vars "wifi={version}" '
             f'--extra-vars "ansible_user={ssh_user}" '
             f'--extra-vars "ansible_password={ssh_password}" '
-            f'--tags stop-start-water-agent'
+            f"--tags stop-start-water-agent"
         )
-        output = subprocess.Popen(_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output = subprocess.Popen(
+            _cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
         for line in output.stdout:
             st.text(line.decode("utf-8"))
         for line in output.stderr:
             st.text(line.decode("utf-8"))
 
-class _SessionState:
 
+class _SessionState:
     def __init__(self, session, hash_funcs):
         """Initialize SessionState instance."""
         self.__dict__["_state"] = {
@@ -297,7 +306,9 @@ class _SessionState:
             self._state["is_rerun"] = False
 
         elif self._state["hash"] is not None:
-            if self._state["hash"] != self._state["hasher"].to_bytes(self._state["data"], None):
+            if self._state["hash"] != self._state["hasher"].to_bytes(
+                self._state["data"], None
+            ):
                 self._state["is_rerun"] = True
                 self._state["session"].request_rerun()
 
