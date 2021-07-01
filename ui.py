@@ -48,15 +48,15 @@ def main():
 def home(state):
     st.title("One-Green IoT Agent and Microcontroller setup wizard")
 
-    try:
-        Repo.clone_from(NODE_IOT_AGENT_REPO_URL, NODE_IOT_AGENT_LOCAL_REPO)
-    except GitCommandError:
-        pass
-
     if os.path.isdir(NODE_IOT_AGENT_LOCAL_REPO):
-        st.success("Local node agent sources files found")
+        st.success("Local node agent sources files found ... downloading")
     else:
         st.error("Local node agent sources files not found")
+        try:
+            Repo.clone_from(NODE_IOT_AGENT_REPO_URL, NODE_IOT_AGENT_LOCAL_REPO)
+            st.experimental_rerun()
+        except GitCommandError:
+            st.write(f"Can not download repo, please check this repo {NODE_IOT_AGENT_REPO_URL=}")
 
     repo = Repo(NODE_IOT_AGENT_LOCAL_REPO)
     for remote in repo.remotes:
@@ -68,12 +68,10 @@ def home(state):
     col1, col2 = st.beta_columns(2)
 
     try:
+        col1.write("Active branch/release")
         col1.success(repo.active_branch)
     except TypeError:
         pass
-
-    for tag in repo.tags:
-        col1.success(tag)
 
     remote_ref = ["/" + x.name for x in repo.remote().refs]
     tags = ["/" + x.name for x in repo.tags]
