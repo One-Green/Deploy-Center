@@ -11,6 +11,7 @@ watchdog = "*"
 gitpython = "*"
 scapy = "*"
 ansible-vault = "*"
+sh = "*"
 
 [dev-packages]
 
