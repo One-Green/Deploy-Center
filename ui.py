@@ -109,7 +109,7 @@ def config(state):
     if os.path.isfile(LOCAL_VAULT):
         vault_exist = True
     else:
-        st.warning(f"\"{LOCAL_VAULT}\" file not found, create new one ")
+        st.warning(f'"{LOCAL_VAULT}" file not found, create new one ')
 
     st.subheader("Vault secret")
     vault_secret = st.text_input(
@@ -126,7 +126,7 @@ def config(state):
     st.markdown("""---""")
 
     if vault_exist:
-        st.success(f"\"{LOCAL_VAULT}\" file found ")
+        st.success(f'"{LOCAL_VAULT}" file found ')
         col1, col2 = st.beta_columns(2)
         if col1.button("Unseal vault"):
             st.write(get_vault_dict(vault_secret))
@@ -170,12 +170,12 @@ def config(state):
             "api_basic_auth_password": api_basic_auth_password,
         }
         st.markdown("""---""")
-        if st.button(f"Save to \"{LOCAL_VAULT}\" file"):
+        if st.button(f'Save to "{LOCAL_VAULT}" file'):
             if vault_secret and vault_secret_confirm:
                 if vault_secret == vault_secret_confirm:
                     vault = Vault(vault_secret)
                     vault.dump(data, open(LOCAL_VAULT, "w"))
-                    st.success(f"\"{LOCAL_VAULT}\" saved successfully")
+                    st.success(f'"{LOCAL_VAULT}" saved successfully')
                 else:
                     st.error("Password not same")
             else:
@@ -212,7 +212,7 @@ def mega_firmata(state):
 
 
 def nano_sonar(state):
-    st.title(":wrench: Flash Ard" "uino Nano firmware")
+    st.title(":wrench: Flash Arduino Nano firmware")
     _serial = st.selectbox("", [x.device for x in serial.tools.list_ports.comports()])
 
     col1, col2 = st.beta_columns(2)
@@ -284,7 +284,9 @@ def deploy_water_node_agent(state):
         st.markdown("""---""")
         st.header("Setup Wifi")
         wifi_ssid = st.text_input("Wifi SSID:", _secret["wifi_ssid"])
-        wifi_secret = st.text_input("Wifi Secret:", _secret["wifi_secret"], type="password")
+        wifi_secret = st.text_input(
+            "Wifi Secret:", _secret["wifi_secret"], type="password"
+        )
 
         if st.button("Submit Wifi configuration", help="Configure wifi on node agent"):
             if not (ip or ssh_user or ssh_user):
@@ -312,7 +314,9 @@ def deploy_water_node_agent(state):
         mqtt_host = st.text_input("MQTT Host:", _secret["mqtt_host"])
         mqtt_port = st.text_input("MQTT Port:", _secret["mqtt_port"])
         mqtt_user = st.text_input("MQTT User:", _secret["mqtt_user"])
-        mqtt_password = st.text_input("MQTT Password:", _secret["mqtt_password"], type="password")
+        mqtt_password = st.text_input(
+            "MQTT Password:", _secret["mqtt_password"], type="password"
+        )
 
         if st.button(
             "Submit MQTT configuration",
