@@ -19,6 +19,7 @@ from settings import NODE_IOT_AGENT_LOCAL_REPO
 from settings import NODE_IOT_GITHUB_TAG_API
 from core.clean_branch import refresh_branch
 from core.github import get_repo_tags
+from core.tasks.platformio_tasks import flash_nano_sonar
 import serial.tools.list_ports
 import subprocess
 from ansible_vault import Vault
@@ -213,26 +214,8 @@ def mega_firmata(state):
 
 def nano_sonar(state):
     st.title(":wrench: Flash Arduino Nano firmware")
-    _serial = st.selectbox("", [x.device for x in serial.tools.list_ports.comports()])
-
-    col1, col2 = st.beta_columns(2)
-    if col1.button("Refresh serial port list"):
-        st.experimental_rerun()
-
-    if col2.button("Flash"):
-        _cmd = (
-            f"cd {NODE_IOT_AGENT_LOCAL_REPO}/nano_sonar "
-            f"&& "
-            f"pio update "
-            f"&& "
-            f"pio run -t upload --upload-port {_serial}"
-        )
-        output = subprocess.Popen(
-            _cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        for line in output.stdout:
-            st.text(line.decode("utf-8"))
-
+    if st.button("Flash"):
+        flash_nano_sonar()
 
 def deploy_water_node_agent(state):
 
