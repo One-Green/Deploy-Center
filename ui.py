@@ -20,7 +20,8 @@ from settings import NODE_IOT_GITHUB_TAG_API
 from core.clean_branch import refresh_branch
 from core.github import get_repo_tags
 from core.tasks.platformio_tasks import flash_nano_sonar
-import serial.tools.list_ports
+from core.tasks.platformio_tasks import flash_mega_firmata
+from core.tasks.platformio_tasks import flash_esp32_sprinkler
 import subprocess
 from ansible_vault import Vault
 
@@ -186,30 +187,44 @@ def config(state):
 
 
 def sprinkler_firmware(state):
-    st.title("WIP")
+    st.title(":wrench: Flash Sprinkler ESP32 firmware")
+    st.subheader("Vault secret")
+    vault_secret = st.text_input(
+        "Local Vault password:",
+        help="Set password to save/load encrypted data",
+        type="password",
+    )
+    st.markdown("""---""")
+    st.subheader("Node registry parameter")
+    node_tag = st.text_input("Node Tag:")
+    check_node_tag_exist = st.checkbox(
+        "Ensure node tag is free",
+        False,
+        help="If selected and tag already exist in One-Green Core database, sprinkler will not work"
+    )
+    if st.button("Load vault and Flash"):
+        _secret = get_vault_dict(vault_secret)
+        # Build flag keys must fit with this sprinkler platformio.ini file config
+        # https://github.com/One-Green/iot-edge-agent/blob/main/sprinkler/platformio.ini
+        flash_esp32_sprinkler(
+            WIFI_SSID=_secret["wifi_ssid"],
+            WIFI_PASSWORD=_secret["wifi_secret"],
+            API_GATEWAY_URL=_secret["api_host"],
+            API_GATEWAY_BASIC_AUTH_USER=_secret["api_basic_auth_user"],
+            API_GATEWAY_BASIC_AUTH_PASSWORD=_secret["api_basic_auth_password"],
+            NODE_TAG=node_tag,
+            CHECK_NODE_TAG_DUPLICATE=str(check_node_tag_exist).lower(),
+            MQTT_SERVER=_secret["mqtt_host"],
+            MQTT_PORT=_secret["mqtt_port"],
+            MQTT_USER=_secret["mqtt_user"],
+            MQTT_PASSWORD=_secret["mqtt_password"]
+        )
 
 
 def mega_firmata(state):
     st.title(":wrench: Flash Arduino Mega firmware")
-    _serial = st.selectbox("", [x.device for x in serial.tools.list_ports.comports()])
-
-    col1, col2 = st.beta_columns(2)
-    if col1.button("Refresh serial port list"):
-        st.experimental_rerun()
-
-    if col2.button("Flash"):
-        _cmd = (
-            f"cd {NODE_IOT_AGENT_LOCAL_REPO}/mega_firmata "
-            f"&& "
-            f"pio update "
-            f"&& "
-            f"pio run -t upload --upload-port {_serial}"
-        )
-        output = subprocess.Popen(
-            _cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        for line in output.stdout:
-            st.text(line.decode("utf-8"))
+    if st.button("Flash"):
+        flash_mega_firmata()
 
 
 def nano_sonar(state):
@@ -217,8 +232,8 @@ def nano_sonar(state):
     if st.button("Flash"):
         flash_nano_sonar()
 
-def deploy_water_node_agent(state):
 
+def deploy_water_node_agent(state):
     secret_loaded = False
     st.title(":wrench: Deploy water node agent ")
     st.subheader("Vault secret")
@@ -244,8 +259,8 @@ def deploy_water_node_agent(state):
             list(get_repo_tags(NODE_IOT_GITHUB_TAG_API)),
         )
         if st.button(
-            "Install common dependencies",
-            help="This installation is required once / for major uppgrade only",
+                "Install common dependencies",
+                help="This installation is required once / for major uppgrade only",
         ):
             if not (ip or ssh_user or ssh_user):
                 st.warning("IP / ssh user / ssh password => not provided")
@@ -293,7 +308,6 @@ def deploy_water_node_agent(state):
 
         st.markdown("""---""")
         st.header("Configure MQTT")
-
         mqtt_host = st.text_input("MQTT Host:", _secret["mqtt_host"])
         mqtt_port = st.text_input("MQTT Port:", _secret["mqtt_port"])
         mqtt_user = st.text_input("MQTT User:", _secret["mqtt_user"])
@@ -302,8 +316,8 @@ def deploy_water_node_agent(state):
         )
 
         if st.button(
-            "Submit MQTT configuration",
-            help="Fetch new version/start/restart agent with new configuration",
+                "Submit MQTT configuration",
+                help="Fetch new version/start/restart agent with new configuration",
         ):
             if not (ip or ssh_user or ssh_user):
                 st.warning("IP / ssh user / ssh password => not provided")
@@ -330,8 +344,8 @@ def deploy_water_node_agent(state):
         st.header("Start Node Agent")
 
         if st.button(
-            "Start Node Agent",
-            help="Fetch new version/start/restart agent with new configuration",
+                "Start Node Agent",
+                help="Fetch new version/start/restart agent with new configuration",
         ):
             _cmd = (
                 f"ansible-playbook ansible/configure.yaml -i {ip}, "
@@ -399,7 +413,7 @@ class _SessionState:
 
         elif self._state["hash"] is not None:
             if self._state["hash"] != self._state["hasher"].to_bytes(
-                self._state["data"], None
+                    self._state["data"], None
             ):
                 self._state["is_rerun"] = True
                 self._state["session"].request_rerun()
