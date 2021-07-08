@@ -12,6 +12,8 @@ def get_pio_cmd():
             "Scripts",
             "pio.exe"
         )
+    else:
+        return sys.executable.replace("python", "pio")
 
 
 def call_subprocess(_cmd):
