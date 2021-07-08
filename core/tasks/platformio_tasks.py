@@ -10,25 +10,32 @@ from settings import (
 )
 
 
-def flash_nano_sonar():
+def flash_nano_sonar(dry_run=False):
     cmd = (
         f"cd {NANO_SONAR_FIRMWARE_PATH} && "
         f"{get_pio_cmd()} update && "
         f"{get_pio_cmd()} run  -t upload"
     )
-    call_subprocess(cmd)
+    if dry_run:
+        return cmd
+    else:
+        call_subprocess(cmd)
 
 
-def flash_mega_firmata():
+def flash_mega_firmata(dry_run=False):
     cmd = (
         f"cd {MEGA_FIRMATA_FIRMWARE_PATH} && "
         f"{get_pio_cmd()} update && "
         f"{get_pio_cmd()} run  -t upload"
     )
-    call_subprocess(cmd)
+    if dry_run:
+        return cmd
+    else:
+        call_subprocess(cmd)
 
 
 def flash_esp32_sprinkler(
+        dry_run=False,
         **kwargs
 ):
     envs = []
@@ -41,4 +48,7 @@ def flash_esp32_sprinkler(
         f"{get_pio_cmd()} update && "
         f"{envs} {get_pio_cmd()} run -t upload"
     )
-    call_subprocess(cmd)
+    if dry_run:
+        return cmd
+    else:
+        call_subprocess(cmd)

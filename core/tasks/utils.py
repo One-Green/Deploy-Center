@@ -1,18 +1,17 @@
+import sys
+import os
 import platform
-from sh import Command
 import subprocess
 import streamlit as st
 
 
-def get_pio_cmd() -> str:
-    """
-    switch between windows and unix pio binary
-    and return sh.Command object
-    """
+def get_pio_cmd():
     if platform.system() == "Windows":
-        return str(Command("pio.exe"))
-    else:
-        return str(Command("pio"))
+        return os.path.join(
+            sys.executable.replace("python.exe", ""),
+            "Scripts",
+            "pio.exe"
+        )
 
 
 def call_subprocess(_cmd):
