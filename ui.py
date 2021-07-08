@@ -22,7 +22,10 @@ from core.github import get_repo_tags
 from core.tasks.platformio_tasks import flash_nano_sonar
 from core.tasks.platformio_tasks import flash_mega_firmata
 from core.tasks.platformio_tasks import flash_esp32_sprinkler
-import subprocess
+from core.tasks.ansible_tasks import deploy_commons
+from core.tasks.ansible_tasks import configure_wifi
+from core.tasks.ansible_tasks import set_mqtt_envs
+from core.tasks.ansible_tasks import restart_water_node_agent
 from ansible_vault import Vault
 
 LOCAL_VAULT = "vault"
@@ -265,19 +268,12 @@ def deploy_water_node_agent(state):
             if not (ip or ssh_user or ssh_user):
                 st.warning("IP / ssh user / ssh password => not provided")
             else:
-                _cmd = (
-                    f"ansible-playbook ansible/deploy_common.yaml -i {ip}, "
-                    f'--extra-vars "iot_edge_agent_version={version}" '
-                    f'--extra-vars "ansible_user={ssh_user}" '
-                    f'--extra-vars "ansible_password={ssh_password}"'
+                deploy_commons(
+                    host=ip,
+                    ssh_user=ssh_user,
+                    ssh_password=ssh_password,
+                    iot_edge_agent_version=version
                 )
-                output = subprocess.Popen(
-                    _cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-                )
-                for line in output.stdout:
-                    st.text(line.decode("utf-8"))
-                for line in output.stderr:
-                    st.text(line.decode("utf-8"))
 
         st.markdown("""---""")
         st.header("Setup Wifi")
@@ -290,21 +286,13 @@ def deploy_water_node_agent(state):
             if not (ip or ssh_user or ssh_user):
                 st.warning("IP / ssh user / ssh password => not provided")
             else:
-                _cmd = (
-                    f"ansible-playbook ansible/configure.yaml -i {ip}, "
-                    f'--extra-vars "ansible_user={ssh_user}" '
-                    f'--extra-vars "ansible_password={ssh_password}" '
-                    f'--extra-vars "wifi_ssid={wifi_ssid}" '
-                    f'--extra-vars "wifi_secret={wifi_secret}" '
-                    f"--tags setup-wifi"
+                configure_wifi(
+                    host=ip,
+                    ssh_user=ssh_user,
+                    ssh_password=ssh_password,
+                    wifi_ssid=wifi_ssid,
+                    wifi_secret=wifi_secret
                 )
-                output = subprocess.Popen(
-                    _cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-                )
-                for line in output.stdout:
-                    st.text(line.decode("utf-8"))
-                for line in output.stderr:
-                    st.text(line.decode("utf-8"))
 
         st.markdown("""---""")
         st.header("Configure MQTT")
@@ -322,45 +310,27 @@ def deploy_water_node_agent(state):
             if not (ip or ssh_user or ssh_user):
                 st.warning("IP / ssh user / ssh password => not provided")
             else:
-                _cmd = (
-                    f"ansible-playbook ansible/configure.yaml -i {ip}, "
-                    f'--extra-vars "ansible_user={ssh_user}" '
-                    f'--extra-vars "ansible_password={ssh_password}" '
-                    f'--extra-vars "mqtt_host={mqtt_host}" '
-                    f'--extra-vars "mqtt_port={mqtt_port}" '
-                    f'--extra-vars "mqtt_user={mqtt_user}" '
-                    f'--extra-vars "mqtt_password={mqtt_password}" '
-                    f"--tags set-mqtt-env"
+                set_mqtt_envs(
+                    host=ip,
+                    ssh_user=ssh_user,
+                    ssh_password=ssh_password,
+                    mqtt_host=mqtt_host,
+                    mqtt_port=mqtt_port,
+                    mqtt_user=mqtt_user,
+                    mqtt_password=mqtt_password
                 )
-                output = subprocess.Popen(
-                    _cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-                )
-                for line in output.stdout:
-                    st.text(line.decode("utf-8"))
-                for line in output.stderr:
-                    st.text(line.decode("utf-8"))
 
         st.markdown("""---""")
         st.header("Start Node Agent")
-
         if st.button(
                 "Start Node Agent",
                 help="Fetch new version/start/restart agent with new configuration",
         ):
-            _cmd = (
-                f"ansible-playbook ansible/configure.yaml -i {ip}, "
-                f'--extra-vars "wifi={version}" '
-                f'--extra-vars "ansible_user={ssh_user}" '
-                f'--extra-vars "ansible_password={ssh_password}" '
-                f"--tags stop-start-water-agent"
+            restart_water_node_agent(
+                host=ip,
+                ssh_user=ssh_user,
+                ssh_password=ssh_password
             )
-            output = subprocess.Popen(
-                _cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-            )
-            for line in output.stdout:
-                st.text(line.decode("utf-8"))
-            for line in output.stderr:
-                st.text(line.decode("utf-8"))
 
 
 class _SessionState:
