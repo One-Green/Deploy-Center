@@ -1,4 +1,5 @@
 import sys
+import platform
 from .utils import get_pio_cmd
 from .utils import call_subprocess
 
@@ -41,6 +42,11 @@ def flash_esp32_sprinkler(
     envs = []
     for k, v in kwargs.items():
         envs.append(f"{k}={v}")
+
+    if platform.system() == "Windows":
+        def _envs_for_windows(_env): return f"set {_env}"
+        envs = list(map(_envs_for_windows, envs))
+
     envs = " ".join(envs)
 
     cmd = (
