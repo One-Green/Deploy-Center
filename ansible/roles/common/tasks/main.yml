@@ -38,6 +38,7 @@
       - sqlite3
       - wget
       - lsb-core
+      - npm
     state: present
     update_cache: yes
   when: ansible_facts['os_family'] == "Debian"
@@ -59,14 +60,10 @@
     - name: Check pm2 exist
       shell: "which pm2"
   rescue:
-    - name: Resize /tmp 246M > 500M
-      shell: "mount -o remount,size=500M /tmp/"
-    - name: Install pm2
-      shell: "wget -qO- https://getpm2.com/install.sh | bash"
-    - name: clean /tmp
-      shell: "/bin/rm -rf /tmp/*"
-    - name: "Resize /tmp 500M > 246M"
-      shell: "mount -o remount,size=246M /tmp/"
+    - name: Install "pm2" node.js package globally
+      community.general.npm:
+        name: pm2
+        global: yes
 
 - name: pm2 autostart node agent at startup
   shell: "pm2 startup"
