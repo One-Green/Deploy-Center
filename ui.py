@@ -237,7 +237,7 @@ def nano_sonar(state):
 
 
 def deploy_water_node_agent(state):
-    secret_loaded = False
+
     st.title(":wrench: Deploy water node agent ")
     st.subheader("Vault secret")
     vault_secret = st.text_input(
@@ -245,92 +245,90 @@ def deploy_water_node_agent(state):
         help="Set password to save/load encrypted data",
         type="password",
     )
-    if st.button("Load vault"):
+    if vault_secret:
         _secret = get_vault_dict(vault_secret)
         st.success("Vault secret loaded successfully")
-        secret_loaded = True
 
-    if secret_loaded:
-        st.markdown("""---""")
-        st.header("Node Agent ssh parameters")
-        ip = st.text_input("Set hardware ip", "192.168.x.x")
-        col1, col2 = st.beta_columns(2)
-        ssh_user = col1.text_input("SSH User:")
-        ssh_password = col2.text_input("SSH Password:", type="password")
-        version = st.selectbox(
-            "Select software version ( avalaible tags from GithHub)",
-            list(get_repo_tags(NODE_IOT_GITHUB_TAG_API)),
-        )
-        if st.button(
-                "Install common dependencies",
-                help="This installation is required once / for major uppgrade only",
-        ):
-            if not (ip or ssh_user or ssh_user):
-                st.warning("IP / ssh user / ssh password => not provided")
-            else:
-                deploy_commons(
-                    host=ip,
-                    ssh_user=ssh_user,
-                    ssh_password=ssh_password,
-                    iot_edge_agent_version=version
-                )
-
-        st.markdown("""---""")
-        st.header("Setup Wifi")
-        wifi_ssid = st.text_input("Wifi SSID:", _secret["wifi_ssid"])
-        wifi_secret = st.text_input(
-            "Wifi Secret:", _secret["wifi_secret"], type="password"
-        )
-
-        if st.button("Submit Wifi configuration", help="Configure wifi on node agent"):
-            if not (ip or ssh_user or ssh_user):
-                st.warning("IP / ssh user / ssh password => not provided")
-            else:
-                configure_wifi(
-                    host=ip,
-                    ssh_user=ssh_user,
-                    ssh_password=ssh_password,
-                    wifi_ssid=wifi_ssid,
-                    wifi_secret=wifi_secret
-                )
-
-        st.markdown("""---""")
-        st.header("Configure MQTT")
-        mqtt_host = st.text_input("MQTT Host:", _secret["mqtt_host"])
-        mqtt_port = st.text_input("MQTT Port:", _secret["mqtt_port"])
-        mqtt_user = st.text_input("MQTT User:", _secret["mqtt_user"])
-        mqtt_password = st.text_input(
-            "MQTT Password:", _secret["mqtt_password"], type="password"
-        )
-
-        if st.button(
-                "Submit MQTT configuration",
-                help="Fetch new version/start/restart agent with new configuration",
-        ):
-            if not (ip or ssh_user or ssh_user):
-                st.warning("IP / ssh user / ssh password => not provided")
-            else:
-                set_mqtt_envs(
-                    host=ip,
-                    ssh_user=ssh_user,
-                    ssh_password=ssh_password,
-                    mqtt_host=mqtt_host,
-                    mqtt_port=mqtt_port,
-                    mqtt_user=mqtt_user,
-                    mqtt_password=mqtt_password
-                )
-
-        st.markdown("""---""")
-        st.header("Start Node Agent")
-        if st.button(
-                "Start Node Agent",
-                help="Fetch new version/start/restart agent with new configuration",
-        ):
-            restart_water_node_agent(
+    st.markdown("""---""")
+    st.header("Node Agent ssh parameters")
+    ip = st.text_input("Set hardware ip", "192.168.x.x")
+    col1, col2 = st.beta_columns(2)
+    ssh_user = col1.text_input("SSH User:")
+    ssh_password = col2.text_input("SSH Password:", type="password")
+    version = st.selectbox(
+        "Select software version ( avalaible tags from GithHub)",
+        list(get_repo_tags(NODE_IOT_GITHUB_TAG_API)),
+    )
+    if st.button(
+            "Install common dependencies",
+            help="This installation is required once / for major uppgrade only",
+    ):
+        if not (ip or ssh_user or ssh_user):
+            st.warning("IP / ssh user / ssh password => not provided")
+        else:
+            deploy_commons(
                 host=ip,
                 ssh_user=ssh_user,
-                ssh_password=ssh_password
+                ssh_password=ssh_password,
+                iot_edge_agent_version=version
             )
+
+    st.markdown("""---""")
+    st.header("Setup Wifi")
+    wifi_ssid = st.text_input("Wifi SSID:", _secret["wifi_ssid"])
+    wifi_secret = st.text_input(
+        "Wifi Secret:", _secret["wifi_secret"], type="password"
+    )
+
+    if st.button("Submit Wifi configuration", help="Configure wifi on node agent"):
+        if not (ip or ssh_user or ssh_user):
+            st.warning("IP / ssh user / ssh password => not provided")
+        else:
+            configure_wifi(
+                host=ip,
+                ssh_user=ssh_user,
+                ssh_password=ssh_password,
+                wifi_ssid=wifi_ssid,
+                wifi_secret=wifi_secret
+            )
+
+    st.markdown("""---""")
+    st.header("Configure MQTT")
+    mqtt_host = st.text_input("MQTT Host:", _secret["mqtt_host"])
+    mqtt_port = st.text_input("MQTT Port:", _secret["mqtt_port"])
+    mqtt_user = st.text_input("MQTT User:", _secret["mqtt_user"])
+    mqtt_password = st.text_input(
+        "MQTT Password:", _secret["mqtt_password"], type="password"
+    )
+
+    if st.button(
+            "Submit MQTT configuration",
+            help="Fetch new version/start/restart agent with new configuration",
+    ):
+        if not (ip or ssh_user or ssh_user):
+            st.warning("IP / ssh user / ssh password => not provided")
+        else:
+            set_mqtt_envs(
+                host=ip,
+                ssh_user=ssh_user,
+                ssh_password=ssh_password,
+                mqtt_host=mqtt_host,
+                mqtt_port=mqtt_port,
+                mqtt_user=mqtt_user,
+                mqtt_password=mqtt_password
+            )
+
+    st.markdown("""---""")
+    st.header("Start Node Agent")
+    if st.button(
+            "Start Node Agent",
+            help="Fetch new version/start/restart agent with new configuration",
+    ):
+        restart_water_node_agent(
+            host=ip,
+            ssh_user=ssh_user,
+            ssh_password=ssh_password
+        )
 
 
 class _SessionState:
