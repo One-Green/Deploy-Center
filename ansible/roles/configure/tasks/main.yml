@@ -9,7 +9,7 @@
 - name: Persist MQTT variables varialbes > /etc/environnment
   lineinfile:
     dest: /etc/environment
-    line: "{{ item.env }}='{{ item.value }}'"
+    line: "export {{ item.env }}='{{ item.value }}'"
     regexp: "^{{ item.env }}="
     state: present
   loop:
