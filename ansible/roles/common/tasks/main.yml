@@ -45,6 +45,8 @@
     - name: Check python{{ python_major }} exist
       shell: "{{ app_python }} --version"
   rescue:
+    - name: create /opt/python/
+      shell: "mkdir -p /opt/python/ || true"
     - name: download python {{ python_version }} to /opt/python/{{ python_version }}
       ansible.builtin.unarchive:
         src: https://github.com/One-Green/build-binaries/raw/master/orange-pi-zero2/debian-10/python/{{ python_version }}/{{ python_version }}.zip
