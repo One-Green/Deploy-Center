@@ -11,7 +11,7 @@
   loop:
     - {
       env: overlays,
-      value: uart1
+      value: uart1 uart2
     }
   register: armbian_env
 
