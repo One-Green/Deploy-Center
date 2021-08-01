@@ -5,7 +5,7 @@
 - name: Enable all hardware features (i2c uart ...)
   lineinfile:
     dest: /boot/armbianEnv.txt
-    line: "{{ item.env }}='{{ item.value }}'"
+    line: "{{ item.env }}={{ item.value }}"
     regexp: "^{{ item.env }}="
     state: present
   loop:
