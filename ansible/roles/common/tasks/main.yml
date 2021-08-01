@@ -30,30 +30,33 @@
       apt:
         autoremove: yes
 
-- name: Install binaries (python,pip,sqlite3...)
+- name: Install apt binaries ...
   apt:
     name:
-      - python3.8-dev
-      - python3.8-distutils
       - sqlite3
       - wget
-      - lsb-core
       - npm
     state: present
     update_cache: yes
   when: ansible_facts['os_family'] == "Debian"
 
-- name: Install Pip
+- name: Setup Python {{python_version}} (operation can take time ~15 min)
   block:
-    - name: Check pip3.8 exist
-      shell: "which pip3.8"
+    - name: Check python{{ python_major }} exist
+      shell: "{{ app_python }} --version"
   rescue:
-    - name: Get Pip
-      get_url:
-        url: https://bootstrap.pypa.io/get-pip.py
-        dest: /tmp/get-pip.py
-    - name: Install Pip
-      shell: python3.8 /tmp/get-pip.py
+    - name: download python {{ python_version }} to /opt/python/{{ python_version }}
+      ansible.builtin.unarchive:
+        src: https://github.com/One-Green/build-binaries/raw/master/orange-pi-zero2/debian-10/python/{{ python_version }}/{{ python_version }}.zip
+        dest: /opt/python/
+        remote_src: yes
+    - name: Change
+      file: path={{ item }} owner=root group=root mode=a+x
+      with_items:
+        - /opt/python/{{ python_version }}/bin/python{{ python_major }}
+        - /opt/python/{{ python_version }}/bin/pip{{ python_major }}
+    - name: clean /tmp/*
+      shell: rm -rv /tmp/* || true
 
 - name: Ensure pm2 is installed
   block:
@@ -77,4 +80,4 @@
     - change-version
 
 - name: Install Python requirements
-  shell: "pip3.8 install -r {{ iot_edge_agent.dest }}/requirements.txt"
+  shell: "{{ app_pip }} install -r {{ iot_edge_agent.dest }}/requirements.txt"

@@ -10,3 +10,8 @@ mqtt_host: ""
 mqtt_port: ""
 mqtt_user: ""
 mqtt_password: ""
+
+python_version: "3.9.6"
+python_major: "3.9"
+app_python: "/opt/python/{{ python_version }}/bin/python{{ python_major }}"
+app_pip: "/opt/python/{{ python_version }}/bin/pip{{ python_major }}"

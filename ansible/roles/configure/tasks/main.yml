@@ -31,7 +31,7 @@
       shell: pm2 stop all
       ignore_errors: yes
     - name: "Start agent"
-      shell: "cd {{ iot_edge_agent.dest }}/water && pm2 start {{item}}.py --interpreter python3.8 --update-env && pm2 save"
+      shell: "cd {{ iot_edge_agent.dest }}/water && pm2 start {{item}}.py --interpreter {{ app_python }} --update-env && pm2 save"
       loop:
         - "agent"
         - "watchdog"
